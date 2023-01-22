@@ -1,62 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+// import MyDriver from "./drivern";
 const driver_1 = require("./driver");
 async function init() {
+    //Download the file song
+    // const driver = new MyDriver();
+    // await driver.init();
+    // await driver.get("ALL_TIME_RANK_URL");
+    // await driver.acceptCookies();
+    // const hrefSongs = await driver.getSongs();
+    // await driver.getByHref(hrefSongs[0]);
+    // await driver.downloadSong();
+    // await driver.quit(5_000);
+    //Upload the file song
     const driver = new driver_1.default();
-    driver
-        .init()
-        .then(driver.get("SOURCE_URL"))
-        .then(driver.wait(3000))
-        .then(driver.get("TARGET_URL"))
-        .then(driver.acceptCookies())
-        .then(driver.getTitle())
-        .then(driver.get("SOURCE_URL"))
-        .then(driver.acceptCookies())
-        .then(driver.getTitle());
-    // // Click on a genre
-    // let genres = await driver.findElements(By.className("z-10"));
-    // len = genres.length;
-    // for (let index = 0; index < len; index++) {
-    //   let genre = genres[index];
-    //   let text = await genre.getText();
-    //   if (text.toUpperCase() === "Blues".toUpperCase()) {
-    //     await genre.click();
-    //     break;
-    //   }
-    // }
-    // // Click on a song
-    // let songs = await driver.findElements(By.className("ptxt-track"));
-    // len = songs.length;
-    // for (let index = 0; index < len; index++) {
-    //   let song = songs[index];
-    //   let text = await song.getText();
-    //   console.log(index, text);
-    //   if (text.toUpperCase() === "Sundown".toUpperCase()) {
-    //     let link = await song.findElement(By.css("a"));
-    //     await link.click();
-    //     wait(1000);
-    //     await driver.navigate().back();
-    //     break;
-    //   }
-    // }
-    // // To click again, you have to find it again
-    // songs = await driver.findElements(By.className("ptxt-track"));
-    // len = songs.length;
-    // for (let index = 1; index < len; index++) {
-    //   let song = songs[index];
-    //   let text = await song.getText();
-    //   console.log(index, text);
-    //   if (text.toUpperCase() === "Sundown".toUpperCase()) {
-    //     let link = await song.findElement(By.css("a"));
-    //     await link.click();
-    //     wait(1000);
-    //     await driver.navigate().back();
-    //     break;
-    //   }
-    // }
-    // setTimeout(() => {
-    //   driver.quit();
-    // }, 60 * 1000);
+    await driver.init();
+    await driver.get("CHANNEL_URL");
+    await driver.quit(600000);
 }
 init();
 //# sourceMappingURL=init.js.map
