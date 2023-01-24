@@ -3,12 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const path = require("path");
 const selenium_webdriver_1 = require("selenium-webdriver");
+const commonDriver_1 = require("./commonDriver");
 const driverBase_1 = require("./driverBase");
 const utility_1 = require("./utility");
 /**
  * @class Creates a new WebDriver client based with browser and builder configuration.
  */
-class MyDriver extends driverBase_1.default {
+class MusicDriver extends commonDriver_1.default {
     /**
      * Predefined url targets
      */
@@ -49,61 +50,8 @@ class MyDriver extends driverBase_1.default {
      */
     constructor(config = driverBase_1.default.defaultConfig) {
         config.downloadDir = "/music";
+        config.urls = MusicDriver.urls;
         super(config);
-    }
-    /**
-     * The first step to use a webdriver: Initialize the webdriver.
-     */
-    async init() {
-        await this._init();
-    }
-    /**
-     * Schedules a command to navigate to the given URL.
-     *
-     * @param url The website key url from the Driver Urls Interface.
-     */
-    async get(url) {
-        await this._getByHref(MyDriver.urls[url]);
-    }
-    /**
-     * Schedules a command to navigate to the given URL.
-     *
-     * @param url A generic website url.
-     */
-    async getByHref(url) {
-        await this._getByHref(url);
-    }
-    /**
-     * Get's the title of a web page.
-     *
-     * @return {Promise<string>} A strings that represents the title of the current web page.
-     */
-    async getTitle() {
-        return await this._getTitle();
-    }
-    /**
-     * Accept cookies for the current web site
-     *
-     *@param identifiers A object with two lists for detecting the accept button: a locator By list and a string list.
-     */
-    async acceptCookies(identifiers) {
-        await this._acceptCookies(identifiers);
-    }
-    /**
-     * Makes any execution to be delayed.
-     *
-     * @param ms The number of milliseconds for delay.
-     */
-    async wait(ms) {
-        await this._wait(ms);
-    }
-    /**
-     * Quit and close the web driver after couple of milliseconds.
-     *
-     * @param ms The number of milliseconds before quitting and closing the web driver.
-     */
-    async quit(ms) {
-        await this._quit(ms);
     }
     //Specific driver functions for this project app
     async downloadSong() {
@@ -149,20 +97,20 @@ class MyDriver extends driverBase_1.default {
         return await this._errorWrapper(this._getMetaAboutSong, logMessage, errorMessage)({ id: id });
     }
     async _downloadSong() {
-        const { downloadBtnXPath, acceptDownloadXPath } = MyDriver.XPaths.downloadSong;
+        const { downloadBtnXPath, acceptDownloadXPath } = MusicDriver.XPaths.downloadSong;
         const downloadBtn = await this.webDriver.findElement(selenium_webdriver_1.By.xpath(downloadBtnXPath));
         await downloadBtn.click();
         const acceptDownload = await this.webDriver.findElement(selenium_webdriver_1.By.xpath(acceptDownloadXPath));
         await acceptDownload.click();
     }
     async _downloadImage(params) {
-        const { imageXPath } = MyDriver.XPaths.downloadImage;
+        const { imageXPath } = MusicDriver.XPaths.downloadImage;
         const image = await this.webDriver.findElement(selenium_webdriver_1.By.xpath(imageXPath));
         const src = await image.getAttribute("src");
         return await utility_1.default.downloadImageWithNaming(src, params.fileName);
     }
     async _getMetaAboutSong(params) {
-        const { titleXPath, artistXPath, artistContactXPath, albumXPath, genresListXPath, durationXPath, releasedXPath, licenseLinkXPath, } = MyDriver.XPaths.metadataSong;
+        const { titleXPath, artistXPath, artistContactXPath, albumXPath, genresListXPath, durationXPath, releasedXPath, licenseLinkXPath, } = MusicDriver.XPaths.metadataSong;
         const metadata = {
             id: "",
             title: "",
@@ -208,5 +156,5 @@ class MyDriver extends driverBase_1.default {
         return metadata;
     }
 }
-exports.default = MyDriver;
-//# sourceMappingURL=driver.js.map
+exports.default = MusicDriver;
+//# sourceMappingURL=musicDriver.js.map

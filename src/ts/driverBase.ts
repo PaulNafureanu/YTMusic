@@ -1,6 +1,6 @@
 import path = require("path");
 import fs = require("fs");
-import { Builder, By, WebDriver } from "selenium-webdriver";
+import { Builder, By, TouchSequence, WebDriver } from "selenium-webdriver";
 import { Options as ChromeOptions } from "selenium-webdriver/chrome";
 import { Options as FirefoxOptions } from "selenium-webdriver/firefox";
 
@@ -9,6 +9,7 @@ export interface DriverConfig {
   downloadDir: string;
   browser: "chrome" | "firefox";
   setTimeouts: { implicit: number };
+  urls: any;
 }
 
 export interface Identifier {
@@ -33,21 +34,20 @@ export interface LogMessage {
   webDriverId: number;
 }
 
-interface DriverUrls {
+export interface DriverUrls {
   SOURCE_URL: string;
 }
 
-export default class MyDriverBase<T extends DriverUrls> {
+export default class DriverBase {
   static readonly defaultConfig: DriverConfig = {
     maxRetries: 2,
     downloadDir: "",
     browser: "chrome",
     setTimeouts: { implicit: 10_000 },
+    urls: {
+      SOURCE_URL: "https://www.google.com/",
+    },
   };
-
-  protected urls: T = {
-    SOURCE_URL: "https://www.google.com/",
-  } as T;
 
   static readonly cookieIdentifiers: Identifier = {
     locators: [By.css("button"), By.css("div"), By.css("a")],
@@ -82,10 +82,10 @@ export default class MyDriverBase<T extends DriverUrls> {
   protected operationId: number = 0;
   protected operationCount: number = 0;
 
-  constructor(config: DriverConfig = MyDriverBase.defaultConfig) {
+  constructor(config: DriverConfig = DriverBase.defaultConfig) {
     this._checkApp();
     this.config = config;
-    MyDriverBase.webDriverCount++;
+    DriverBase.webDriverCount++;
   }
   private _checkApp() {
     // Check if a directory exists, otherwise create the folder in the app
@@ -120,7 +120,7 @@ export default class MyDriverBase<T extends DriverUrls> {
   protected async _init() {
     // Init the browser
     let operationId = ++this.operationId;
-    this.webDriverId = MyDriverBase.webDriverCount;
+    this.webDriverId = DriverBase.webDriverCount;
     let logMessage: LogMessage = {
       message: `Initialized for ${this.config.browser} browser.`,
       operationId: operationId,
@@ -130,7 +130,7 @@ export default class MyDriverBase<T extends DriverUrls> {
     await this._errorWrapper(this.__init, logMessage, errorMessage)();
 
     //Set some configs on the browser
-    operationId = ++operationId;
+    operationId = ++this.operationId;
     logMessage.message = `Setted implicit timeout to ${this.config.setTimeouts.implicit}`;
     logMessage.operationId = operationId;
     errorMessage.functName = "_config";
@@ -166,6 +166,24 @@ export default class MyDriverBase<T extends DriverUrls> {
       errorMessage
     )();
   }
+  protected async _acceptCookies(identifiers?: Identifier) {
+    // Accept cookies
+    const operationId = ++this.operationId;
+    let logMessage: LogMessage = {
+      message: `Accepted cookies`,
+      operationId: operationId,
+      webDriverId: this.webDriverId,
+    };
+    let errorMessage: ErrorMessage = {
+      functName: "acceptCookies",
+      retryCount: 0,
+    };
+    await this._errorWrapper(
+      this.__acceptCookies,
+      logMessage,
+      errorMessage
+    )({ identifiers: identifiers });
+  }
   protected async _wait(ms: number) {
     //Navigate to a given url
     const operationId = ++this.operationId;
@@ -189,7 +207,7 @@ export default class MyDriverBase<T extends DriverUrls> {
     await this._errorWrapper(this.__quit, logMessage, errorMessage)({ ms: ms });
   }
 
-  private async __init(this: MyDriverBase<T>) {
+  private async __init(this: DriverBase) {
     const config = this.config;
     const downloadDir = path.join(
       __dirname,
@@ -215,18 +233,53 @@ export default class MyDriverBase<T extends DriverUrls> {
     }
     this.webDriver = await builder.build();
   }
-  private async __config(this: MyDriverBase<T>) {
+  private async __config(this: DriverBase) {
     await this.webDriver
       .manage()
       .setTimeouts({ implicit: this.config.setTimeouts.implicit });
   }
-  private async __get(this: MyDriverBase<T>, params: { url: string }) {
+  private async __get(this: DriverBase, params: { url: string }) {
     await this.webDriver.get(params.url);
   }
-  private async __getTitle(this: MyDriverBase<T>) {
+  private async __getTitle(this: DriverBase) {
     return await this.webDriver.getTitle();
   }
-  private async __wait(this: MyDriverBase<T>, params: { ms: number }) {
+  private async __acceptCookies(
+    this: DriverBase,
+    params: { identifiers?: Identifier }
+  ) {
+    async function accept(this: DriverBase, identifierList: Identifier) {
+      let shouldBreak = false;
+      for (const locator of identifierList.locators) {
+        if (shouldBreak) break;
+        let elements = await this.webDriver.findElements(locator);
+        let len = elements.length;
+        for (let index = 0; index < len; index++) {
+          if (shouldBreak) break;
+          let element = elements[index];
+          if (!element) continue;
+          let textElement = await element.getText();
+          if (!textElement) continue;
+          textElement = textElement.toUpperCase();
+          for (const text of identifierList.texts) {
+            if (text.toUpperCase() === textElement) {
+              await element.click();
+              shouldBreak = true;
+              break;
+            }
+          }
+        }
+      }
+      return shouldBreak;
+    }
+
+    let shouldBreak = false;
+    const { identifiers } = params;
+    if (identifiers) shouldBreak = await accept.bind(this)(identifiers);
+    if (!shouldBreak)
+      shouldBreak = await accept.bind(this)(DriverBase.cookieIdentifiers);
+  }
+  private async __wait(this: DriverBase, params: { ms: number }) {
     const timeoutId: NodeJS.Timeout | number | string = await new Promise(
       (resolve) => {
         const timeoutId = setTimeout(() => {
@@ -236,7 +289,7 @@ export default class MyDriverBase<T extends DriverUrls> {
     );
     clearTimeout(timeoutId);
   }
-  private async __quit(this: MyDriverBase<T>, params: { ms: number }) {
+  private async __quit(this: DriverBase, params: { ms: number }) {
     const timeoutId: NodeJS.Timeout | number | string = await new Promise(
       (resolve) => {
         const timeoutId = setTimeout(() => {
@@ -253,7 +306,7 @@ export default class MyDriverBase<T extends DriverUrls> {
     errorMessage: ErrorMessage
   ): (params?: object) => Promise<P> {
     // Error Wrapper and handler function
-    async function inner(this: MyDriverBase<T>, params?: object) {
+    async function inner(this: DriverBase, params?: object) {
       let isError = true;
       let retryCount = 0;
       while (isError && retryCount <= this.config.maxRetries) {

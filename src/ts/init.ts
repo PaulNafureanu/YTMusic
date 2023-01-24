@@ -1,21 +1,19 @@
-// import MyDriver from "./drivern";
-// import MyDriver from "./driver";
+import path = require("path");
+import AVProcessDriver from "./avProcessDriver";
+import MusicDriver from "./musicDriver";
 
 async function init() {
-  //Download the file song
-  // const driver = new MyDriver();
-  // await driver.init();
-  // await driver.get("ALL_TIME_RANK_URL");
-  // await driver.acceptCookies();
-  // const hrefSongs = await driver.getSongs();
-  // await driver.getByHref(hrefSongs[0]);
-  // await driver.downloadSong();
-  // await driver.quit(5_000);
-  //Upload the file song
-  // const driver = new MyDriver();
-  // await driver.init();
-  // await driver.get("CHANNEL_URL");
-  // await driver.quit(600_000);
+  const avDriver = new AVProcessDriver();
+  await avDriver.init();
+  await avDriver.get("AV_PROCESSOR_URL");
+  await avDriver.createProject();
+  const files = [
+    "C:/Users/leopa/desktop/me/ytmusic/downloads/imgs/1_Night Owl_Broke For Free.png",
+    "C:/Users/leopa/desktop/me/ytmusic/downloads/music/Broke For Free - Night Owl.mp3",
+  ];
+
+  const files1 = ["C:/Users/leopa/desktop/me/ytmusic/downloads/1.txt"];
+  await avDriver.uploadFiles(files1);
 }
 
 init();

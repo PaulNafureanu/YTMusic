@@ -1,40 +1,11 @@
-import MyDriverBase from "./driverBase";
+import DriverBase, { DriverConfig, Identifier } from "./driverBase";
 
-/**
- * @interface DriverUrl Interface for predefined url targets.
- */
-export interface DriverUrl {
-  SOURCE_URL: string;
-  GENRES_URL: string;
-  WEEK_RANK_URL: string;
-  MONTH_RANK_URL: string;
-  ALL_TIME_RANK_URL: string;
-  TARGET_URL: string;
-  CHANNEL_URL: string;
-}
-
-/**
- * @class Creates a new WebDriver client based with browser and builder configuration.
- */
-export default class MyDriver extends MyDriverBase<DriverUrl> {
-  /**
-   * Predefined url targets
-   */
-  protected urls: DriverUrl = {
-    SOURCE_URL: "https://freemusicarchive.org",
-    GENRES_URL: "https://freemusicarchive.org/genres",
-    WEEK_RANK_URL: "https://freemusicarchive.org/music/charts/this-week",
-    MONTH_RANK_URL: "https://freemusicarchive.org/music/charts/this-month",
-    ALL_TIME_RANK_URL: "https://freemusicarchive.org/music/charts/all",
-    TARGET_URL: "https://www.youtube.com/",
-    CHANNEL_URL: "https://www.youtube.com/channel/UCopd8ft4OZRkVa2nG7ZA4HQ",
-  };
-
+export default class CommonDriver<T> extends DriverBase {
   /**
    * @constructor for the MyDriver class
    */
-  constructor() {
-    super();
+  constructor(config: DriverConfig = DriverBase.defaultConfig) {
+    super(config);
   }
 
   /**
@@ -49,8 +20,8 @@ export default class MyDriver extends MyDriverBase<DriverUrl> {
    *
    * @param url The website key url from the Driver Urls Interface.
    */
-  async get(url: keyof DriverUrl) {
-    await this._getByHref(url);
+  async get(url: keyof T) {
+    await this._getByHref(CommonDriver.defaultConfig.urls[url]);
   }
 
   /**
@@ -69,6 +40,15 @@ export default class MyDriver extends MyDriverBase<DriverUrl> {
    */
   async getTitle(): Promise<string> {
     return await this._getTitle();
+  }
+
+  /**
+   * Accept cookies for the current web site
+   *
+   *@param identifiers A object with two lists for detecting the accept button: a locator By list and a string list.
+   */
+  async acceptCookies(identifiers?: Identifier) {
+    await this._acceptCookies(identifiers);
   }
 
   /**

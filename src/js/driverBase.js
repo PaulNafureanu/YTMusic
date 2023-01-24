@@ -5,15 +5,15 @@ const fs = require("fs");
 const selenium_webdriver_1 = require("selenium-webdriver");
 const chrome_1 = require("selenium-webdriver/chrome");
 const firefox_1 = require("selenium-webdriver/firefox");
-class MyDriverBase {
+class DriverBase {
     static defaultConfig = {
         maxRetries: 2,
         downloadDir: "",
         browser: "chrome",
         setTimeouts: { implicit: 10000 },
-    };
-    urls = {
-        SOURCE_URL: "https://www.google.com/",
+        urls: {
+            SOURCE_URL: "https://www.google.com/",
+        },
     };
     static cookieIdentifiers = {
         locators: [selenium_webdriver_1.By.css("button"), selenium_webdriver_1.By.css("div"), selenium_webdriver_1.By.css("a")],
@@ -46,10 +46,10 @@ class MyDriverBase {
     webDriverId = 0;
     operationId = 0;
     operationCount = 0;
-    constructor(config = MyDriverBase.defaultConfig) {
+    constructor(config = DriverBase.defaultConfig) {
         this._checkApp();
         this.config = config;
-        MyDriverBase.webDriverCount++;
+        DriverBase.webDriverCount++;
     }
     _checkApp() {
         // Check if a directory exists, otherwise create the folder in the app
@@ -79,7 +79,7 @@ class MyDriverBase {
     async _init() {
         // Init the browser
         let operationId = ++this.operationId;
-        this.webDriverId = MyDriverBase.webDriverCount;
+        this.webDriverId = DriverBase.webDriverCount;
         let logMessage = {
             message: `Initialized for ${this.config.browser} browser.`,
             operationId: operationId,
@@ -88,7 +88,7 @@ class MyDriverBase {
         let errorMessage = { functName: "init", retryCount: 0 };
         await this._errorWrapper(this.__init, logMessage, errorMessage)();
         //Set some configs on the browser
-        operationId = ++operationId;
+        operationId = ++this.operationId;
         logMessage.message = `Setted implicit timeout to ${this.config.setTimeouts.implicit}`;
         logMessage.operationId = operationId;
         errorMessage.functName = "_config";
@@ -115,6 +115,20 @@ class MyDriverBase {
         };
         let errorMessage = { functName: "getTitle", retryCount: 0 };
         return await this._errorWrapper(this.__getTitle, logMessage, errorMessage)();
+    }
+    async _acceptCookies(identifiers) {
+        // Accept cookies
+        const operationId = ++this.operationId;
+        let logMessage = {
+            message: `Accepted cookies`,
+            operationId: operationId,
+            webDriverId: this.webDriverId,
+        };
+        let errorMessage = {
+            functName: "acceptCookies",
+            retryCount: 0,
+        };
+        await this._errorWrapper(this.__acceptCookies, logMessage, errorMessage)({ identifiers: identifiers });
     }
     async _wait(ms) {
         //Navigate to a given url
@@ -173,6 +187,42 @@ class MyDriverBase {
     async __getTitle() {
         return await this.webDriver.getTitle();
     }
+    async __acceptCookies(params) {
+        async function accept(identifierList) {
+            let shouldBreak = false;
+            for (const locator of identifierList.locators) {
+                if (shouldBreak)
+                    break;
+                let elements = await this.webDriver.findElements(locator);
+                let len = elements.length;
+                for (let index = 0; index < len; index++) {
+                    if (shouldBreak)
+                        break;
+                    let element = elements[index];
+                    if (!element)
+                        continue;
+                    let textElement = await element.getText();
+                    if (!textElement)
+                        continue;
+                    textElement = textElement.toUpperCase();
+                    for (const text of identifierList.texts) {
+                        if (text.toUpperCase() === textElement) {
+                            await element.click();
+                            shouldBreak = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return shouldBreak;
+        }
+        let shouldBreak = false;
+        const { identifiers } = params;
+        if (identifiers)
+            shouldBreak = await accept.bind(this)(identifiers);
+        if (!shouldBreak)
+            shouldBreak = await accept.bind(this)(DriverBase.cookieIdentifiers);
+    }
     async __wait(params) {
         const timeoutId = await new Promise((resolve) => {
             const timeoutId = setTimeout(() => {
@@ -230,5 +280,5 @@ class MyDriverBase {
         }
     }
 }
-exports.default = MyDriverBase;
+exports.default = DriverBase;
 //# sourceMappingURL=driverBase.js.map
