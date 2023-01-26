@@ -1,6 +1,7 @@
 import fs = require("fs");
 import https = require("https");
 import path = require("path");
+import child_process = require("child_process");
 
 export default class Utility {
   static async downloadImageWithNaming(
@@ -28,6 +29,23 @@ export default class Utility {
           );
         }
       });
+    });
+  }
+
+  static async execFileUpload(filePath: string) {
+    const exePath = "C:/Users/leopa/desktop/me/ytmusic/autoit/fileUpload.exe";
+    const args = [filePath];
+    return await new Promise((resolve, reject) => {
+      const child = child_process.execFile(
+        exePath,
+        args,
+        (error, stdout, stderr) => {
+          if (error) {
+            reject(error);
+          }
+        }
+      );
+      resolve(child);
     });
   }
 }

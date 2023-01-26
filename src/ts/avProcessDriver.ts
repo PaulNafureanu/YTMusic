@@ -5,6 +5,7 @@ import DriverBase, {
   ErrorMessage,
   LogMessage,
 } from "./driverBase";
+import Utility from "./utility";
 
 interface DriverUrls {
   AV_PROCESSOR_URL: string;
@@ -20,8 +21,13 @@ export default class AVProcessDriver extends CommonDriver<DriverUrls> {
     projects: {
       createProjectXPath:
         "/html/body/div[1]/main/div/div[2]/div/div/div[2]/div[2]/button[1]",
-      uploadFileXPath:
-        "/html/body/div[5]/div/div/div[2]/div/div/div/div/div[1]/div/div/span[2]/span",
+    },
+    uploadFiles: {
+      closePanelXPath: "/html/body/div[5]/div/div/div[2]/div/button",
+      addMediaBtnXPath:
+        "/html/body/div[1]/main/div[2]/div/div/div/div[3]/div[1]/div/div[1]/button[2]",
+      browseFilesXPath:
+        "/html/body/div[5]/div/div/div/div/div/div/div/div[1]/div/div/span[2]/span",
     },
   };
 
@@ -82,19 +88,24 @@ export default class AVProcessDriver extends CommonDriver<DriverUrls> {
     return await this.webDriver.getCurrentUrl();
   }
   private async _uploadFiles(params: { files: string[] }) {
-    try {
-      const dragDropXPath =
-        "/html/body/div[5]/div/div/div[2]/div/div/div/div/div[1]/div";
+    const { closePanelXPath, addMediaBtnXPath, browseFilesXPath } =
+      AVProcessDriver.XPaths.uploadFiles;
+    const closePanelBtn = await this.webDriver.findElement(
+      By.xpath(closePanelXPath)
+    );
+    await closePanelBtn.click();
 
-      const { uploadFileXPath } = AVProcessDriver.XPaths.projects;
-      const uploadFileBtn = await this.webDriver.findElement(
-        By.xpath(uploadFileXPath)
+    const addMediaBtn = await this.webDriver.findElement(
+      By.xpath(addMediaBtnXPath)
+    );
+
+    for (let filePath of params.files) {
+      await addMediaBtn.click();
+      const browseFilesBtn = await this.webDriver.findElement(
+        By.xpath(browseFilesXPath)
       );
-      await uploadFileBtn.click();
-      //   await uploadFileBtn.sendKeys(...params.files);
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
+      await browseFilesBtn.click();
+      await Utility.execFileUpload(filePath);
     }
   }
 }

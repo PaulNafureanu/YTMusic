@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const selenium_webdriver_1 = require("selenium-webdriver");
 const commonDriver_1 = require("./commonDriver");
 const driverBase_1 = require("./driverBase");
+const utility_1 = require("./utility");
 class AVProcessDriver extends commonDriver_1.default {
     static urls = {
         AV_PROCESSOR_URL: "https://www.veed.io/workspaces/9ef7ad3b-f77b-497c-b3fa-40bdf5bdbde6/home",
@@ -10,7 +11,11 @@ class AVProcessDriver extends commonDriver_1.default {
     static XPaths = {
         projects: {
             createProjectXPath: "/html/body/div[1]/main/div/div[2]/div/div/div[2]/div[2]/button[1]",
-            uploadFileXPath: "/html/body/div[5]/div/div/div[2]/div/div/div/div/div[1]/div/div/span[2]/span",
+        },
+        uploadFiles: {
+            closePanelXPath: "/html/body/div[5]/div/div/div[2]/div/button",
+            addMediaBtnXPath: "/html/body/div[1]/main/div[2]/div/div/div/div[3]/div[1]/div/div[1]/button[2]",
+            browseFilesXPath: "/html/body/div[5]/div/div/div/div/div/div/div/div[1]/div/div/span[2]/span",
         },
     };
     constructor(config = driverBase_1.default.defaultConfig) {
@@ -54,16 +59,15 @@ class AVProcessDriver extends commonDriver_1.default {
         return await this.webDriver.getCurrentUrl();
     }
     async _uploadFiles(params) {
-        try {
-            const dragDropXPath = "/html/body/div[5]/div/div/div[2]/div/div/div/div/div[1]/div";
-            const { uploadFileXPath } = AVProcessDriver.XPaths.projects;
-            const uploadFileBtn = await this.webDriver.findElement(selenium_webdriver_1.By.xpath(uploadFileXPath));
-            await uploadFileBtn.click();
-            //   await uploadFileBtn.sendKeys(...params.files);
-        }
-        catch (error) {
-            console.log(error);
-            throw new Error(error);
+        const { closePanelXPath, addMediaBtnXPath, browseFilesXPath } = AVProcessDriver.XPaths.uploadFiles;
+        const closePanelBtn = await this.webDriver.findElement(selenium_webdriver_1.By.xpath(closePanelXPath));
+        await closePanelBtn.click();
+        const addMediaBtn = await this.webDriver.findElement(selenium_webdriver_1.By.xpath(addMediaBtnXPath));
+        for (let filePath of params.files) {
+            await addMediaBtn.click();
+            const browseFilesBtn = await this.webDriver.findElement(selenium_webdriver_1.By.xpath(browseFilesXPath));
+            await browseFilesBtn.click();
+            await utility_1.default.execFileUpload(filePath);
         }
     }
 }

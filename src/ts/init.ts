@@ -12,8 +12,7 @@ async function init() {
     "C:/Users/leopa/desktop/me/ytmusic/downloads/music/Broke For Free - Night Owl.mp3",
   ];
 
-  const files1 = ["C:/Users/leopa/desktop/me/ytmusic/downloads/1.txt"];
-  await avDriver.uploadFiles(files1);
+  await avDriver.uploadFiles(files);
 }
 
 init();

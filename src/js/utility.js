@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const https = require("https");
 const path = require("path");
+const child_process = require("child_process");
 class Utility {
     static async downloadImageWithNaming(url, filename) {
         const filePath = path.join(__dirname, `./../../downloads/imgs/${filename}`);
@@ -22,6 +23,18 @@ class Utility {
                     reject(new Error(`Request failled with the status code ${response.statusCode}`));
                 }
             });
+        });
+    }
+    static async execFileUpload(filePath) {
+        const exePath = "C:/Users/leopa/desktop/me/ytmusic/autoit/fileUpload.exe";
+        const args = [filePath];
+        return await new Promise((resolve, reject) => {
+            const child = child_process.execFile(exePath, args, (error, stdout, stderr) => {
+                if (error) {
+                    reject(error);
+                }
+            });
+            resolve(child);
         });
     }
 }

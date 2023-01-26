@@ -10,8 +10,7 @@ async function init() {
         "C:/Users/leopa/desktop/me/ytmusic/downloads/imgs/1_Night Owl_Broke For Free.png",
         "C:/Users/leopa/desktop/me/ytmusic/downloads/music/Broke For Free - Night Owl.mp3",
     ];
-    const files1 = ["C:/Users/leopa/desktop/me/ytmusic/downloads/1.txt"];
-    await avDriver.uploadFiles(files1);
+    await avDriver.uploadFiles(files);
 }
 init();
 //# sourceMappingURL=init.js.map
